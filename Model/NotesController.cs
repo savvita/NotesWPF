@@ -48,22 +48,22 @@ namespace NotesWPF.Model
             Notes?.Add(note);
         }
 
-        public async Task Remove(NoteModel note)
+        public void Remove(NoteModel note)
         {
             Notes?.Remove(note);
 
             try
             {
-                await DBData.Delete(note);
+                DBData.Delete(note);
             }
             catch { }
         }
 
-        public async Task<bool> Update(NoteModel newNote)
+        public bool Update(NoteModel newNote)
         {
             try
             {
-                return await DBData.Update(newNote);
+                return DBData.Update(newNote);
             }
             catch { }
 
@@ -77,6 +77,11 @@ namespace NotesWPF.Model
             if (Notes != null)
             {
                 DBData.Insert(Notes.Where(note => note.Id == null).ToList());
+            }
+
+            if(DBConnection.Connection().State == System.Data.ConnectionState.Open)
+            {
+                DBConnection.Connection().Close();
             }
         }
     }

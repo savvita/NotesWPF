@@ -18,14 +18,10 @@ namespace NotesWPF.Model
                 {
                     if(sqlConnection == null)
                     {
-                        sqlConnection = new SqlConnection();
+                        sqlConnection = new SqlConnection(ConfigurationManager.ConnectionStrings["DBConnection"].ConnectionString);
+                        sqlConnection.Open();
                     }
                 }
-            }
-
-            if (sqlConnection.State != System.Data.ConnectionState.Open)
-            {
-                sqlConnection.ConnectionString = ConfigurationManager.ConnectionStrings["DBConnection"].ConnectionString;
             }
 
             return sqlConnection;

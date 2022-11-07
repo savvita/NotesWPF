@@ -125,11 +125,11 @@ namespace NotesWPF.ViewModel
         {
             get
             {
-                return deleteCommand ?? new RelayCommand(async () =>
+                return deleteCommand ?? new RelayCommand(() =>
                 {
                     if (Controller.Notes != null && CurrentNote != null)
                     {
-                        await Controller.Remove(CurrentNote);
+                        Controller.Remove(CurrentNote);
                         Controller.Notes.Remove(CurrentNote);
                     }
                 });
@@ -140,7 +140,7 @@ namespace NotesWPF.ViewModel
         {
             get
             {
-                return okCommand ?? new RelayCommand<object>(async (note) =>
+                return okCommand ?? new RelayCommand<object>((note) =>
                 {
                     if (Controller.Notes != null && CurrentNote != null)
                     {
@@ -152,7 +152,7 @@ namespace NotesWPF.ViewModel
                             Controller.Notes[idx].Title = values[1];
                             Controller.Notes[idx].Content = values[2];
                             OnPropertyChanged(nameof(NotesController.Notes));
-                            await Controller.Update(CurrentNote);
+                            Controller.Update(CurrentNote);
                         }
                     }
                 });
