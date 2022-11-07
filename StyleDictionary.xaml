@@ -1,14 +1,17 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
                     xmlns:local="clr-namespace:NotesWPF.View">
     
     <local:NoteConverter x:Key="noteParameterConverter" />
 
+    <Brush x:Key="DarkBackgroundColorBrush">#FF0D0B10</Brush>
+    <Brush x:Key="TextColorBrush">#FFCFCFCF</Brush>
 
     <!--#region MainGrid Style -->
     <Style TargetType="Grid">
         <Style.Setters>
-            <Setter Property="Background" Value="DarkSlateGray" />
+            <Setter Property="Background" Value="{StaticResource DarkBackgroundColorBrush}" />
         </Style.Setters>
     </Style>
     <!--#endregion-->
@@ -81,7 +84,7 @@
         <Style.Setters>
             <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled" />
             <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
-            <Setter Property="Background" Value="DarkSlateGray" />
+            <Setter Property="Background" Value="{StaticResource DarkBackgroundColorBrush}" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Margin" Value="10" />
 
@@ -147,21 +150,18 @@
     <!--#region Button style -->
     <Style TargetType="Button">
         <Style.Setters>
-            <Setter Property="Margin" Value="10" />
-            <Setter Property="Padding" Value="10"></Setter>
-            <Setter Property="VerticalContentAlignment" Value="Center"></Setter>
-            <Setter Property="HorizontalContentAlignment" Value="Center"></Setter>
             <Setter Property="Foreground" Value="LightCyan" />
             <Setter Property="FontSize" Value="20" />
             <Setter Property="FontWeight" Value="Bold" />
-
+            <Setter Property="Margin" Value="10" />
+            <Setter Property="Padding" Value="10"></Setter>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border CornerRadius="20" 
+                        <Border CornerRadius="10" 
                                     Background="SteelBlue" 
                                     BorderBrush="LightCyan" 
-                                    BorderThickness="3">
+                                    BorderThickness="2">
 
                             <ContentPresenter Width="{TemplateBinding Width}"
                                                   Height="{TemplateBinding Height}"
@@ -176,6 +176,23 @@
                 </Setter.Value>
             </Setter>
         </Style.Setters>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Opacity" Value="0.8" />
+            </Trigger>
+            <MultiTrigger>
+                <MultiTrigger.Conditions>
+                    <Condition Property="IsMouseOver" Value="True" />
+                    <Condition Property="IsPressed" Value="True" />
+                </MultiTrigger.Conditions>
+                <MultiTrigger.Setters>
+                    <Setter Property="Background" Value="White" />
+                    <Setter Property="Opacity" Value="1" />
+                    <Setter Property="FontSize" Value="18" />
+                    <Setter Property="Foreground" Value="Black" />
+                </MultiTrigger.Setters>
+            </MultiTrigger>
+        </Style.Triggers>
     </Style>
 
     <!--#endregion-->

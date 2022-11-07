@@ -6,57 +6,64 @@ namespace NotesWPF.Model
 {
     public class NoteModel :INotifyPropertyChanged
     {
-        private string title;
+        public int? Id { get; }
 
-        public string Title
+        private string? title;
+
+        public string? Title
         {
             get => title;
 
             set 
             { 
                 title = value;
-                OnPropertyChanged("Title");
+                OnPropertyChanged(nameof(Title));
             }
         }
 
-        private DateTime date;
+        private DateTime? date;
 
-        public DateTime Date
+        public DateTime? Date
         {
             get => date;
 
             set 
             { 
                 date = value;
-                OnPropertyChanged("Date");
+                OnPropertyChanged(nameof(Date));
             }
         }
 
-        private string content;
+        private string? content;
 
-        public string Content
+        public string? Content
         {
             get => content;
 
             set 
             { 
                 content = value;
-                OnPropertyChanged("Content");
+                OnPropertyChanged(nameof(Content));
             }
         }
 
         public NoteModel()
         {
-            date = DateTime.Now;
+            Date = DateTime.Now;
             Title = String.Empty;
             Content = String.Empty;
         }
 
-        public NoteModel(DateTime date, string title, string content)
+        public NoteModel(DateTime? date, string? title, string? content)
         {
             Title = title;
             Date = date;
             Content = content;
+        }
+
+        public NoteModel(int id, DateTime? date, string? title, string? content) : this(date, title, content)
+        {
+            Id = id;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

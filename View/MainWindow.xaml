@@ -39,13 +39,7 @@
             <StackPanel Grid.Row="0">
 
                 <!--#region Search -->
-                <TextBox Name="search" Style="{StaticResource SearchStyle}">
-                    <i:Interaction.Triggers>
-                        <i:EventTrigger EventName="TextChanged">
-                            <i:InvokeCommandAction Command="{Binding SearchCommand}" CommandParameter="{Binding ElementName=search,Path=Text}" />
-                        </i:EventTrigger>
-                    </i:Interaction.Triggers>
-                </TextBox>
+                <TextBox Name="search" Style="{StaticResource SearchStyle}" Text="{Binding Filter, UpdateSourceTrigger=PropertyChanged}" />
                 <!--#endregion-->
 
                 <!--#region Sort -->
@@ -86,7 +80,7 @@
 
 
         <!--#region All notes -->
-        <ListBox Grid.Row="1" Name="items" Grid.Column="0" ItemsSource="{Binding Notes}" 
+        <ListBox Grid.Row="1" Name="items" Grid.Column="0" ItemsSource="{Binding Controller.Notes}" 
                      SelectedItem="{Binding CurrentNote, UpdateSourceTrigger=PropertyChanged}" />
         <!--#endregion-->
 
@@ -120,6 +114,7 @@
             </DockPanel>
         </Grid>
         <!--#endregion-->
+        <!--#endregion-->
 
         <!--#region Buttons -->
         <Grid Grid.Row="2" Grid.ColumnSpan="2">
@@ -134,7 +129,7 @@
 
             <Button Grid.Column="1" Content="Delete" Command="{Binding DeleteCommand}" />
 
-            <Button Grid.Column="2" Content="Ok" Command="{Binding OkCommand}">
+            <Button Grid.Column="2" Content="Accept changes" Command="{Binding OkCommand}">
                 <Button.CommandParameter>
                     <MultiBinding Converter="{StaticResource noteParameterConverter}">
                         <Binding ElementName="DateTextBox" Path="Content" />
@@ -144,7 +139,7 @@
                 </Button.CommandParameter>
             </Button>
 
-            <Button Grid.Column="3" Content="Cancel" Click="CancelButton_Click" />
+            <Button Grid.Column="3" Content="Cancel changes" Click="CancelButton_Click" />
         </Grid>
         <!--#endregion-->
 

@@ -1,56 +1,90 @@
 ﻿using System.Linq;
-using System.Collections.ObjectModel;
 using NotesWPF.Model;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using GalaSoft.MvvmLight.Command;
 using System;
+using System.Windows.Data;
 
 namespace NotesWPF.ViewModel
 {
     public class MainWindowViewModel : INotifyPropertyChanged
     {
-        private FileController controller;
-        private ObservableCollection<NoteModel>? notes;
-        public ObservableCollection<NoteModel>? Notes 
-        {
-            get => notes;
-
-            private set
-            {
-                notes = value;
-                OnPropertyChanged("Notes");
-            }
-        }
+        public NotesController Controller { get; set; } = new NotesController();
 
         private NoteModel? currentNote;
-        public NoteModel? CurrentNote 
+        public NoteModel? CurrentNote
         {
             get => currentNote;
-                
+
             set
             {
                 currentNote = value;
-                OnPropertyChanged("CurrentNote");
+                OnPropertyChanged(nameof(CurrentNote));
+            }
+        }
+
+        private ICollectionView? notesView;
+        private SortDescription sortByTitle;
+        private SortDescription sortByDate;
+
+        private string? filter;
+
+        public string? Filter
+        {
+            get
+            {
+                return filter;
+            }
+            set
+            {
+                if (value != filter)
+                {
+                    filter = value;
+                    notesView?.Refresh();
+                    OnPropertyChanged(nameof(Filter));
+                }
             }
         }
 
         public MainWindowViewModel()
         {
-            controller = new FileController();
-
-            if(controller.Notes != null)
-                Notes = new ObservableCollection<NoteModel>(controller.Notes);
-
-            addCommand = null;
-            deleteCommand = null;
-            okCommand = null;
-            searchCommand = null;
-            sortByDateCommand = null;
-            sortByTitleCommand = null;
-            sortByDefaultCommand = null;
-            closeCommand = null;
+            Controller.Loaded += Initialize;
+            sortByTitle = new SortDescription("Title", ListSortDirection.Ascending);
+            sortByDate = new SortDescription("Date", ListSortDirection.Ascending);
         }
+
+        private void Initialize()
+        {
+            notesView = CollectionViewSource.GetDefaultView(Controller.Notes);
+            notesView.Filter = obj =>
+            {
+                if (String.IsNullOrEmpty(Filter) == true)
+                {
+                    return true;
+                }
+
+                if (obj is NoteModel note)
+                {
+                    bool isTitleContains = false;
+                    bool isContentContains = false;
+
+                    if (note.Title != null)
+                    {
+                        isTitleContains = note.Title.Contains(Filter, StringComparison.OrdinalIgnoreCase);
+                    }
+
+                    if (note.Content != null)
+                    {
+                        isContentContains = note.Content.Contains(Filter, StringComparison.OrdinalIgnoreCase);
+                    }
+                    return isTitleContains || isContentContains;
+                }
+
+                return false;
+            };
+        }
+
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -75,16 +109,12 @@ namespace NotesWPF.ViewModel
             {
                 return addCommand ?? new RelayCommand<object>((_) =>
                 {
-                    if (controller.Notes != null)
+                    if (Controller.Notes != null)
                     {
                         NoteModel note = new NoteModel();
-                        controller.Notes.Add(note);
+                        Controller.Notes.Add(note);
 
-                        if (Notes != null)
-                        {
-                            Notes.Add(note);
-                            CurrentNote = Notes.Last();
-                        }
+                        CurrentNote = Controller.Notes.Last();
                     }
                 });
 
@@ -95,14 +125,12 @@ namespace NotesWPF.ViewModel
         {
             get
             {
-                return deleteCommand ?? new RelayCommand(() =>
+                return deleteCommand ?? new RelayCommand(async () =>
                 {
-                    if (controller.Notes != null && CurrentNote != null)
+                    if (Controller.Notes != null && CurrentNote != null)
                     {
-                        controller.Notes.Remove(CurrentNote);
-
-                        if(Notes != null)
-                            Notes.Remove(CurrentNote);
+                        await Controller.Remove(CurrentNote);
+                        Controller.Notes.Remove(CurrentNote);
                     }
                 });
             }
@@ -112,52 +140,24 @@ namespace NotesWPF.ViewModel
         {
             get
             {
-                return okCommand ?? new RelayCommand<object>((note) =>
+                return okCommand ?? new RelayCommand<object>(async (note) =>
                 {
-                    if (Notes != null && currentNote != null)
+                    if (Controller.Notes != null && CurrentNote != null)
                     {
-                        int idx = Notes.IndexOf(currentNote);
+                        int idx = Controller.Notes.IndexOf(CurrentNote);
 
                         if (idx != -1)
                         {
                             string[] values = ((string)note).Split("||");
-                            Notes[idx].Title = values[1];
-                            Notes[idx].Content = values[2];
+                            Controller.Notes[idx].Title = values[1];
+                            Controller.Notes[idx].Content = values[2];
+                            OnPropertyChanged(nameof(NotesController.Notes));
+                            await Controller.Update(CurrentNote);
                         }
                     }
                 });
             }
         }
-
-        public RelayCommand<object> SearchCommand
-        {
-            get
-            {
-                return searchCommand ?? new RelayCommand<object>((obj) =>
-                {
-                    if (controller.Notes != null)
-                    {
-                        string text = (string)obj;
-
-                    if (text.Equals(string.Empty))
-                    {
-                        Notes = new ObservableCollection<NoteModel>(controller.Notes);
-                    }
-                    else
-                    {
-                        Notes = new ObservableCollection<NoteModel>(
-                            controller.Notes.Where((note) =>
-                            {
-                                return note != null ?
-                                note.Title.Contains(text, StringComparison.OrdinalIgnoreCase) ||
-                                note.Content.Contains(text, StringComparison.OrdinalIgnoreCase) :
-                                false;
-                            }));
-                        }
-                    }
-                });
-            }
-        } 
 
         public RelayCommand SortByDateCommand
         {
@@ -165,8 +165,11 @@ namespace NotesWPF.ViewModel
             {
                 return sortByDateCommand ?? new RelayCommand(() =>
                 {
-                    if(Notes != null)
-                        Notes = new ObservableCollection<NoteModel>(Notes.OrderBy(note => note.Date));
+                    if (Controller.Notes != null)
+                    {
+                        notesView?.SortDescriptions.Clear();
+                        notesView?.SortDescriptions.Add(sortByDate);
+                    }
                 });
             }
         }
@@ -177,8 +180,11 @@ namespace NotesWPF.ViewModel
             {
                 return sortByTitleCommand ?? new RelayCommand(() =>
                 {
-                    if(Notes != null)
-                        Notes = new ObservableCollection<NoteModel>(Notes.OrderBy(note => note.Title));
+                    if (Controller.Notes != null)
+                    {
+                        notesView?.SortDescriptions.Clear();
+                        notesView?.SortDescriptions.Add(sortByTitle);
+                    }
                 });
             }
         }
@@ -189,8 +195,10 @@ namespace NotesWPF.ViewModel
             {
                 return sortByDefaultCommand ?? new RelayCommand(() =>
                 {
-                    if(controller.Notes != null)
-                        Notes = new ObservableCollection<NoteModel>(controller.Notes);
+                    if (Controller.Notes != null)
+                    {
+                        notesView?.SortDescriptions.Clear();
+                    }
                 });
             }
         }
@@ -201,7 +209,7 @@ namespace NotesWPF.ViewModel
             {
                 return closeCommand ?? new RelayCommand(() =>
                 {
-                    controller.SaveToFile();
+                    Controller.Dispose();
                 });
             }
         }
